@@ -36,26 +36,34 @@ type Texto = String
 type Id = String
 type DataHoraPub = Int
 
-data Post = Post (Id, DataHoraPub) Texto deriving (Show, Eq)
-data Thread = Nil | T Post (Thread)
-
-getId :: Post -> Id
-getId (Post (id, _) _) = id
-
-getDataHora :: Post -> DataHoraPub
-getDataHora (Post (_, dataHoraPub) _) = dataHoraPub
-
-getText :: Post -> Texto
-getText (Post _ texto) = texto
-
+data Post = P (Id, DataHoraPub) Texto deriving (Show, Eq)
+data Thread = Nil | T Post Thread
 
 --letra A
 instance Show Thread where
-    show (Nil) = []
-    show (T p (t)) = "(" ++ getId(p) ++ " " ++ show(getDataHora p) ++ " " ++ getText p ++ ")" ++ show(t)
+    show Nil = "Nulo"
+    show (T (P (id, dataHora) texto) t) = "(" ++ id ++ " " ++ 
+                        show(dataHora) ++ " " ++ texto ++ ") " ++ show t
+
+posts = [(P ("0", 1000) "Edjan"), (P ("1", 2000) "André")]
 
 --letra B
+inserePost :: Thread -> Post -> Thread
+inserePost Nil p = T p Nil
+inserePost (T p t) p1 = T p (inserePost t p1)
 
+--letra C
+threadToList :: Thread -> [Post]
+threadToList Nil = []
+threadToList (T p t) = p: threadToList t
 
+--letra D
+listToThread :: [Post] -> Thread
+listToThread [] = Nil
+listToThread (x:xs) = T x (listToThread xs)
+
+--letra E
+removerPost :: (Id, DataHoraPub) -> Thread -> Thread
+removerPost (id, dataHora) t = listToThread ([a | a <- (filter (\(P(b, c) _) -> b /= id || c /= dataHora) (threadToList t))])
 
 

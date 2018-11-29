@@ -12,27 +12,34 @@ module Main where
          else 
              return ()
     
-    fornecedor :: TVar Int -> TVar Int -> TVar Int -> MVar Int -> IO()
-    fornecedor pao carne tomate fim = do
-    --                                   f <- takeMVar fim
-                                       atomically (do
-                                                    writeTVar pao 30
-                                                    writeTVar carne 30
-                                                    writeTVar tomate 30
-                                                  )
-    ---                                   putMVar fim (f-1)
-                                       fornecedor pao carne tomate fim
+    fornecedor :: MVar Bool -> TVar Int -> TVar Int -> TVar Int -> MVar Int -> IO()
+    fornecedor faca pao carne tomate fim = do
+                                        f <- takeMVar faca
+                                        atomically (do
+                                                        p <- readTVar pao
+                                                        c <- readTVar carne
+                                                        t <- readTVar tomate
+                                                        if (p <= 30 || c <= 30 || t <= 30) then do
+                                                            writeTVar pao (p + 1)
+                                                            writeTVar carne (c + 1)
+                                                            writeTVar tomate (t + 1)
+                                                        else
+                                                            return ()
+                                                    )
+                                        putMVar faca f
+                                        fornecedor faca pao carne tomate fim
     
     produtor :: TVar Int -> TVar Int -> TVar Int -> MVar Bool ->   TVar Int -> MVar Int -> IO()
     produtor pao carne tomate faca  sand fim = do
                       f <- takeMVar faca
-    --                  fi <- takeMVar fim
+    --                fi <- takeMVar fim
                       atomically (do 
                                    p <- readTVar pao
                                    c <- readTVar carne
                                    t <- readTVar tomate
                                    if (p <= 0 || c <= 0 || t <= 0) 
-                                   then retry
+                                   then 
+                                    return ()
                                    else
                                     do 
                                         s <- readTVar sand
@@ -52,10 +59,10 @@ module Main where
             sand <- atomically (newTVar 0 )
             faca <- newMVar False 
             fim <- newMVar 10 
-            forkIO(fornecedor pao carne tomate fim)
+            forkIO(fornecedor faca pao carne tomate fim)
             forkIO(produtor pao carne tomate faca sand fim)
             forkIO(produtor pao carne tomate faca sand fim)
-            threadDelay (10000)
+            threadDelay (1000000)
             --waitThreads fim
             p <- atomically (readTVar pao)
             c <- atomically (readTVar carne)

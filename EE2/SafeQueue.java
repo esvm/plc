@@ -1,14 +1,14 @@
 public class SafeQueue {
     private int[] queue;
     private int size;
-    
+
     public SafeQueue(int size) {
         this.queue = new int[size];
         this.size = 0;
     }
 
     public synchronized void push(int v) throws InterruptedException {
-        if (this.size == this.queue.length)
+        while (this.size == this.queue.length)
             wait();
 
         this.queue[this.size++] = v;
@@ -20,7 +20,7 @@ public class SafeQueue {
     }
 
     public int pop() throws InterruptedException {
-        if (this.size == 0)
+        while (this.size == 0)
             wait();
 
         int v = this.queue[0];
